@@ -1,8 +1,6 @@
 // @ts-nocheck
 const puppeteer = require("puppeteer");
 
-const docentesJson = require("../static/docentes.json");
-
 const Docente = require("../models/docente.model");
 const Persona = require("../models/persona.model");
 
@@ -24,77 +22,83 @@ function diacriticSensitiveRegex(string = "") {
 const poblarDocentesDesdeJson = async (req, res, next) => {
   try {
     if (process.env.IS_LOCALHOST) {
-      const docentesPromises = docentesJson.map((d) => {
-        return new Promise(async (resolve, reject) => {
-          try {
-            const rut = parseInt(d.label.split(" - ")[0].trim());
-            // @ts-ignore
-            const nombreCompleto = unescape(
-              encodeURIComponent(
-                d.label
-                  .split(" - ")[1]
-                  .replace(".", "")
-                  .replace("      ", " ")
-                  .split(" ")
-                  .filter((e) => e && e != "")
-                  .join(" ")
-              )
-            ).toTitleCase();
-            const idInterno = parseInt(d.value.trim());
-
-            let personas = await Persona.find({
-              nombreCompleto: {
-                $regex: diacriticSensitiveRegex(nombreCompleto),
-                $options: "i",
-              },
-            }).lean();
-
-            let correo;
-            let correoVerificado = false;
-
-            if (personas.length == 1) {
-              correo = personas[0].correo;
-              correoVerificado = true;
-            } else {
-              try {
-                let personas = await Persona.find({
-                  $text: { $search: nombreCompleto },
-                })
-                  .sort({ score: { $meta: "textScore" } })
-                  .lean();
-
-                const persona = personas[0];
-                correo = persona.correo;
-              } catch (error) {
-                console.error("Error en la búsqueda:", error);
-              }
-            }
-
-            const docente = new Docente({
-              rut,
-              nombreCompleto,
-              idInterno,
-              correoVerificado,
-              correo,
-            });
-
+      try {
+        const docentesJson = require("../static/docentes.json");
+        const docentesPromises = docentesJson.map((d) => {
+          return new Promise(async (resolve, reject) => {
             try {
-              await docente.save();
+              const rut = parseInt(d.label.split(" - ")[0].trim());
+              // @ts-ignore
+              const nombreCompleto = unescape(
+                encodeURIComponent(
+                  d.label
+                    .split(" - ")[1]
+                    .replace(".", "")
+                    .replace("      ", " ")
+                    .split(" ")
+                    .filter((e) => e && e != "")
+                    .join(" ")
+                )
+              ).toTitleCase();
+              const idInterno = parseInt(d.value.trim());
+  
+              let personas = await Persona.find({
+                nombreCompleto: {
+                  $regex: diacriticSensitiveRegex(nombreCompleto),
+                  $options: "i",
+                },
+              }).lean();
+  
+              let correo;
+              let correoVerificado = false;
+  
+              if (personas.length == 1) {
+                correo = personas[0].correo;
+                correoVerificado = true;
+              } else {
+                try {
+                  let personas = await Persona.find({
+                    $text: { $search: nombreCompleto },
+                  })
+                    .sort({ score: { $meta: "textScore" } })
+                    .lean();
+  
+                  const persona = personas[0];
+                  correo = persona.correo;
+                } catch (error) {
+                  console.error("Error en la búsqueda:", error);
+                }
+              }
+  
+              const docente = new Docente({
+                rut,
+                nombreCompleto,
+                idInterno,
+                correoVerificado,
+                correo,
+              });
+  
+              try {
+                await docente.save();
+              } catch (error) {
+                console.error("Error al guardar:", error);
+              }
+              resolve(docente);
             } catch (error) {
-              console.error("Error al guardar:", error);
+              resolve(null);
             }
-            resolve(docente);
-          } catch (error) {
-            resolve(null);
-          }
+          });
         });
-      });
-
-      const docentes = await Promise.all(docentesPromises);
-
-      res.status(200).json(docentes);
+  
+        const docentes = await Promise.all(docentesPromises);
+  
+        res.status(200).json(docentes);
+      } catch (ex) {
+        res.status(200).json([]);
+      }
+      
     } else {
-      res.status(200).json();
+      res.status(200).json([]);
     }
   } catch (error) {
     next(error);
@@ -176,7 +180,7 @@ const poblarPersonasDesdeDirectory = async (req, res, next) => {
         }
       });
     } else {
-      res.status(200).json();
+      res.status(200).json([]);
     }
   } catch (error) {
     next(error);
