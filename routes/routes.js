@@ -1,10 +1,11 @@
 const express = require("express");
 
-//const docentes = require("./docentes");
+const docente = require("./docente.route");
+const poblar = require("./poblar.route");
 
 const router = express.Router();
 
-//router.use("/docentes", docentes);
+router.use("/docentes", docente);
+router.use("/poblar", poblar);
 
 module.exports = router;
-

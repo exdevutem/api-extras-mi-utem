@@ -1,17 +1,13 @@
 const mongoose = require("mongoose");
 
-var docenteSchema = new mongoose.Schema({
+var personaSchema = new mongoose.Schema({
     idInterno: {
         type: Number
-    },
-    correoVerificado: {
-        type: Boolean,
-        default: false,
     },
     nombreCompleto: {
         type: String,
         trim: true,
-        text: true,
+        text: true
     },
     nombres: {
         type: String,
@@ -23,7 +19,8 @@ var docenteSchema = new mongoose.Schema({
     },
     rut: {
         type: Number,
-        unique: true
+        unique: true,
+        sparse: true,
     },
     correo: {
         type: String,
@@ -31,9 +28,17 @@ var docenteSchema = new mongoose.Schema({
         unique: true,
         sparse: true,
     },
+    trabajo: {
+        type: String,
+        trim: true,
+    },
+    telefono: {
+        type: String,
+        trim: true,
+    },
 });
 
 
-var Docente = mongoose.model("Docente", docenteSchema);
+var Persona = mongoose.model("Persona", personaSchema);
 
-module.exports = Docente;
+module.exports = Persona;
