@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 var docenteSchema = new mongoose.Schema({
     idInterno: {
@@ -30,10 +31,11 @@ var docenteSchema = new mongoose.Schema({
         trim: true,
         unique: true,
         sparse: true,
+        text: true,
     },
 });
 
-
+docenteSchema.plugin(mongoosePaginate);
 var Docente = mongoose.model("Docente", docenteSchema);
 
 module.exports = Docente;
