@@ -1,3 +1,4 @@
+// @ts-nocheck
 const mongoose = require("mongoose");
 const mongoosePaginate = require('mongoose-paginate-v2');
 
@@ -33,6 +34,10 @@ var docenteSchema = new mongoose.Schema({
         sparse: true,
         text: true,
     },
+    asignaturasRelacionadas: [{
+        type: mongoose.Schema.ObjectId,
+        ref: 'Asignatura' 
+    }]
 });
 
 docenteSchema.plugin(mongoosePaginate);

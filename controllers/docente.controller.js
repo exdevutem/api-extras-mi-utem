@@ -1,4 +1,5 @@
 // @ts-nocheck
+const Asignatura = require("../models/asignatura.model");
 const Docente = require("../models/docente.model");
 
 var opcionesByReqQuery = (reqQuery) => {
@@ -81,6 +82,60 @@ const buscar = async (req, res, next) => {
   }
 };
 
+const asignar = async (req, res, next) => {
+  try {
+      const { nombreDocente, codigoAsignatura, nombreAsignatura } = req.body;
+      let docente = await Docente.findOne({
+        $text: { $search: nombreDocente },
+      })
+      .populate("asignaturasRelacionadas")
+      .sort({ score: { $meta: "textScore" } });
+      
+      let relacionadas = docente.asignaturasRelacionadas;
+      if (relacionadas == null) {
+        relacionadas = [];
+      }
+      
+      let yaEstaAgregada = relacionadas.filter(a => a.codigo.toUpperCase() == codigoAsignatura.toUpperCase()).length > 0
+      
+      let asignatura = await Asignatura.findOne({
+        codigo: codigoAsignatura
+      });
+
+      if (!yaEstaAgregada) {
+        if (!asignatura) {
+          asignatura = new Asignatura({
+            nombre: nombreAsignatura,
+            codigo: codigoAsignatura,
+            docentesRelacionados: [docente]
+          });
+        }
+        relacionadas.push(asignatura);
+        docente.asignaturasRelacionadas = relacionadas;
+        await docente.save()
+      } else {
+        let docentes = asignatura.docentesRelacionados;
+        if (docentes == null) {
+          docentes = [];
+        }
+        
+        console.log("id", docentes[0]._id.toString(), docente._id.toString(), docentes[0]._id.toString() == docente._id.toString())
+        let yaEstaAgregado = docentes.filter(d => d._id.toString() == docente._id.toString()).length > 0;
+        if (!yaEstaAgregado) {
+          docentes.push(docente);
+          asignatura.docentesRelacionados = docentes;
+        }
+      }
+
+      await asignatura.save();
+      
+      res.status(200).json(docente);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
+  asignar,
   buscar
 };
