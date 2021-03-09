@@ -119,7 +119,6 @@ const asignar = async (req, res, next) => {
           docentes = [];
         }
         
-        console.log("id", docentes[0]._id.toString(), docente._id.toString(), docentes[0]._id.toString() == docente._id.toString())
         let yaEstaAgregado = docentes.filter(d => d._id.toString() == docente._id.toString()).length > 0;
         if (!yaEstaAgregado) {
           docentes.push(docente);
